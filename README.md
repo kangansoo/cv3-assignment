@@ -1,36 +1,74 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 방송 목록 조회
 
-## Getting Started
+라이브 방송과 홈쇼핑 방송 목록을 조회하고, 방송 유형에 따라 목록을 전환하는 Next.js 애플리케이션입니다.
 
-First, run the development server:
+## 실행 방법
+
+### 요구 환경
+
+- Node.js 20 이상
+- npm
+
+### 개발 서버 실행
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+브라우저에서 [http://localhost:3000](http://localhost:3000)으로 접속합니다.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 프로덕션 빌드 및 실행
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+npm run start
+```
 
-## Learn More
+## 주요 기능
 
-To learn more about Next.js, take a look at the following resources:
+- 라이브 방송과 홈쇼핑 방송 유형 전환
+- React Query를 사용한 방송 목록 요청 상태 관리
+- 데스크톱 테이블 및 모바일 목록 반응형 UI
+- 지표 마스킹과 준비 중 상태 표시
+- 요청 본문과 외부 API 응답의 Zod 검증
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 프로젝트 구조
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```text
+src/
+  app/
+    api/broadcast/       # 브라우저 요청을 받는 API Route
+    providers.tsx        # React Query 전역 Provider
+  components/            # 방송 목록 UI 컴포넌트
+  lib/
+    client/              # 브라우저 API 요청과 화면용 데이터 정규화
+    server/              # 외부 API 요청과 응답 검증
+    types/               # 공용 타입
+```
 
-## Deploy on Vercel
+## 데이터 흐름
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. 사용자가 라이브 방송 또는 홈쇼핑을 선택합니다.
+2. React Query가 `/api/broadcast`에 방송 유형을 전달합니다.
+3. Next.js Route Handler가 외부 방송 API에 서버 요청을 보냅니다.
+4. 응답을 검증하고 화면에 필요한 목록 형태로 정리합니다.
+5. 목록 컴포넌트가 데스크톱 또는 모바일 UI로 데이터를 표시합니다.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 핵심 구현 판단
+
+### 외부 API 요청은 Next.js Route Handler에서 처리
+
+외부 API를 브라우저에서 직접 호출하지 않고 `/api/broadcast` Route Handler를 통해 호출합니다. 브라우저의 CORS 정책은 브라우저에서 발생하는 교차 출처 요청에 적용되므로, 서버에서 외부 API로 보내는 요청에는 적용되지 않습니다. 또한 외부 API의 응답 형식과 화면에 필요한 데이터 형식을 서버 및 클라이언트 로직에서 분리할 수 있습니다.
+
+### 원본 응답과 화면 데이터를 분리
+
+라이브 방송과 홈쇼핑 방송은 필드 구조가 다릅니다. 원본 응답 타입은 서버에서 검증하고, 클라이언트에서는 공통된 `BroadcastItem` 형태로 정규화한 뒤 UI에 전달합니다. 따라서 컴포넌트는 방송 유형별 원본 필드 차이를 알 필요 없이 같은 방식으로 목록을 렌더링합니다.
+
+### 잘못된 목록 항목은 제외하고 정상 데이터만 표시
+
+외부 응답의 최상위 구조와 `mask` 값은 반드시 검증합니다. 목록의 각 항목은 방송 유형별 Zod 스키마로 따로 검증하고, 형식이 맞지 않는 항목은 목록에서 제외합니다. 한 항목의 데이터 오류 때문에 전체 목록을 표시하지 못하는 상황을 피하면서, 정상 데이터는 계속 렌더링할 수 있도록 했습니다.
+
+### 공용 타입을 한 곳에서 관리
+
+서버 응답, 화면용 데이터, 컴포넌트 Props 타입은 `src/lib/types/broadcast.ts`에서 관리합니다. 타입 파일 안에서도 서버·프론트·전역 Provider에서 사용하는 목적을 주석으로 구분했습니다.
