@@ -66,7 +66,6 @@ function normalizeLiveBroadcast(broadcast: LiveBroadcast, rank: number): Broadca
   return {
     id: broadcast.objectID,
     rank,
-    platformId: broadcast.platform_id,
     platformName: getLivePlatformName(broadcast.platform_id),
     title: broadcast.title,
     categoryName: liveCategoryNames[broadcast.cid] ?? "분류 미정",
@@ -83,7 +82,6 @@ function normalizeHomeshoppingBroadcast(broadcast: HomeshoppingBroadcast, rank: 
   return {
     id: broadcast.hsshow_id,
     rank,
-    platformId: broadcast.platform_id,
     platformName: broadcast.platform_name,
     title: broadcast.hsshow_title,
     categoryName: broadcast.cat.cat_name,

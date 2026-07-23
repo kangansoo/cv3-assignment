@@ -36,9 +36,6 @@ export type HomeshoppingBroadcast = {
   visit_cnt: number | null
 }
 
-// 서버: 방송 유형별 원본 응답을 하나의 처리 흐름으로 다룰 때 사용한다.
-export type RawBroadcast = LiveBroadcast | HomeshoppingBroadcast
-
 export type BroadcastByType = {
   lb: LiveBroadcast
   hs: HomeshoppingBroadcast
@@ -74,7 +71,6 @@ export type BroadcastMetric = {
 export type BroadcastItem = {
   id: string
   rank: number
-  platformId: string
   platformName: string
   title: string
   categoryName: string
